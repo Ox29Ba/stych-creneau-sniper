@@ -24,9 +24,16 @@ _JOURS_FR = {1: "lundi", 2: "mardi", 3: "mercredi", 4: "jeudi", 5: "vendredi", 6
 # Résolution des lieux
 # --------------------------------------------------------------------------- #
 def _candidate_ids(prop: dict[str, Any]) -> list[str]:
-    """Tous les id_lac où ce créneau peut avoir lieu (défaut + possibles)."""
+    """Lieux où ce créneau est réellement réservable.
+
+    On s'aligne EXACTEMENT sur la logique du site (reservationPlanning.js) qui
+    filtre les lieux sur `ids_lac_possible` uniquement. `ids_lac_possible_origine`
+    est un ensemble plus large (zone d'origine du moniteur) que le site n'utilise
+    PAS pour la réservation : l'inclure ferait matcher des créneaux non
+    réservables au lieu demandé.
+    """
     ids: list[str] = []
-    for key in ("id_lac", "ids_lac_possible", "ids_lac_possible_origine"):
+    for key in ("id_lac", "ids_lac_possible"):
         val = prop.get(key)
         if isinstance(val, list):
             ids.extend(str(x) for x in val)
