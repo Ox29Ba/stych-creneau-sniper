@@ -1,0 +1,53 @@
+name: Veille créneaux Stych
+
+on:
+  schedule:
+    # Toutes les 5 minutes. NB : GitHub peut décaler l'exécution de quelques
+    # minutes en période de forte charge — c'est normal et sans conséquence ici.
+    - cron: "*/5 * * * *"
+  workflow_dispatch:  # permet de lancer manuellement depuis l'onglet Actions
+
+# On empêche deux exécutions de tourner en même temps (elles se marcheraient
+# dessus sur le commit de l'état).
+concurrency:
+  group: check-slots
+  cancel-in-progress: false
+
+permissions:
+  contents: write   # nécessaire pour re-committer state.json
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt
+
+      - name: Vérifier les créneaux
+        env:
+          STYCH_EMAIL: ${{ secrets.STYCH_EMAIL }}
+          STYCH_PASSWORD: ${{ secrets.STYCH_PASSWORD }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python main.py
+
+      - name: Sauvegarder l'état (si modifié)
+        run: |
+          if [ -n "$(git status --porcelain state.json)" ]; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add state.json
+            git commit -m "Maj état des créneaux [skip ci]"
+            git push
+          else
+            echo "Aucun changement d'état à committer."
+          fi

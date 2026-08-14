@@ -1,0 +1,53 @@
+# =============================================================
+#  Filtres du bot — copie ce fichier en `config.yaml`.
+#
+#  TOUT est optionnel. Un critère laissé vide (`[]` ou `null`) est
+#  ignoré. Un créneau est notifié seulement s'il passe TOUS les
+#  critères que tu as définis (ET logique entre les catégories).
+#
+#  Astuce : lance `python main.py --list-lieux` pour afficher tous
+#  les lieux disponibles (départements, villes, arrêts) avec leurs id.
+# =============================================================
+
+filtres:
+  # --- LIEU ---
+  # Un créneau passe le filtre lieu s'il correspond à AU MOINS un des
+  # critères ci-dessous. Laisse tout vide pour accepter tous les lieux.
+  departements: []        # codes département, ex: ["75", "94"]
+  villes: []              # noms de ville, ex: ["PARIS", "VINCENNES"] (insensible à la casse)
+  codes_postaux: []       # ex: ["75011", "75012"]
+  arrets: []              # texte recherché dans l'intitulé, ex: ["Nation", "Daumesnil"]
+  lieux_ids: []           # id_lac précis, ex: ["210", "11"]
+
+  # --- DURÉE (en heures) ---
+  # nb_heure du créneau : 0.75 = 45 min, 1.5 = 1h30 (examen blanc), etc.
+  duree_min: null         # ex: 1.5 pour au moins 1h30
+  duree_max: null         # ex: 0.75 pour au plus 45 min
+  durees_exactes: []      # ex: [1.5] pour ne garder QUE les 1h30
+
+  # --- CRÉDITS ---
+  credits_max: null       # ex: 2 pour ignorer les créneaux qui coûtent trop de crédits
+
+  # --- JOURS DE LA SEMAINE ---
+  # 1 = lundi, 2 = mardi, ... 6 = samedi, 7 = dimanche
+  jours: []               # ex: [6, 7] pour le week-end uniquement
+
+  # --- PLAGE DE DATES --- (format AAAA-MM-JJ, bornes incluses)
+  date_debut: null        # ex: "2026-08-20"
+  date_fin: null          # ex: "2026-09-15"
+
+  # --- PLAGE HORAIRE --- (ne garde que les créneaux qui COMMENCENT dans la fenêtre)
+  heure_min: null         # ex: "17:00" (après le travail)
+  heure_max: null         # ex: "20:00"
+
+  # --- MONITEUR --- (recherche partielle, insensible à la casse)
+  moniteurs: []           # ex: ["Gregory", "Souad"]
+
+options:
+  # N'alerter que pour les créneaux JAMAIS vus auparavant (recommandé).
+  # Si false : renvoie tous les créneaux correspondants à chaque exécution (spam).
+  seulement_nouveaux: true
+
+  # Au tout premier lancement (aucun historique), envoyer un simple
+  # résumé du nombre de créneaux correspondants plutôt que la liste complète.
+  resume_au_premier_lancement: true

@@ -1,0 +1,21 @@
+# Secrets — ne JAMAIS committer
+.env
+
+# NB : state.json n'est PAS ignoré : le workflow GitHub Actions doit pouvoir
+# le committer pour mémoriser les créneaux déjà vus d'une exécution à l'autre.
+# Il ne contient rien de sensible (juste des identifiants de créneaux).
+
+# Config perso (optionnel : décommente si tu ne veux pas publier tes filtres)
+# config.yaml
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+
+# OS
+.DS_Store
