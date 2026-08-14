@@ -65,7 +65,13 @@ class StychClient:
                 LOGIN_URL,
                 data=payload,
                 timeout=self.timeout,
-                headers={"Referer": f"{BASE_URL}/connexion"},
+                headers={
+                    # Sans cet en-tête, le serveur ignore la connexion et renvoie
+                    # un corps vide : le formulaire est soumis en AJAX côté site.
+                    "X-Requested-With": "XMLHttpRequest",
+                    "Referer": f"{BASE_URL}/connexion",
+                    "Origin": BASE_URL,
+                },
             )
         except requests.RequestException as exc:
             raise StychError(f"Échec de la requête de connexion : {exc}") from exc
