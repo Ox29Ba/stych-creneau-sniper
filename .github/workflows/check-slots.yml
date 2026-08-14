@@ -40,14 +40,14 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python main.py
 
-      - name: Sauvegarder l'état (si modifié)
+      - name: Sauvegarder l'état + l'historique (si modifiés)
         run: |
-          if [ -n "$(git status --porcelain state.json)" ]; then
+          if [ -n "$(git status --porcelain state.json historique.csv)" ]; then
             git config user.name  "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add state.json
-            git commit -m "Maj état des créneaux [skip ci]"
+            git add state.json historique.csv
+            git commit -m "Maj état + historique des créneaux [skip ci]"
             git push
           else
-            echo "Aucun changement d'état à committer."
+            echo "Aucun changement à committer."
           fi

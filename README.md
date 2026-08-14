@@ -22,6 +22,8 @@ identifiants et d'un bot Telegram (tout est expliqué plus bas).
   dates, plage horaire, moniteur, nombre de crédits.
 - 🧠 **Anti-spam** : ne te prévient que pour les créneaux **jamais vus**, pas à
   chaque vérification.
+- 📈 **Historique des désistements** : chaque place détectée est journalisée dans
+  `historique.csv` (heure de détection, date, lieu…) pour repérer les habitudes.
 - ☁️ **24/7 gratuit** via GitHub Actions (ton Mac peut rester éteint).
 - 🪶 **Léger** : de simples requêtes HTTP (pas de navigateur), une exécution
   prend quelques secondes.
@@ -186,6 +188,14 @@ GitHub Actions (cron 5 min)
 - `main.py` — orchestration + options CLI.
 
 ---
+
+## 📈 Historique des désistements
+
+Stych n'expose pas l'historique des annulations passées. Le bot le **construit
+lui-même** : chaque nouveau créneau détecté est ajouté à `historique.csv` avec
+son heure de détection. Après quelques jours, tu peux ouvrir ce fichier (Excel,
+Numbers…) pour repérer **quand** les désistements tombent le plus souvent à tes
+lieux, et être prêt au bon moment.
 
 ## ❓ FAQ
 

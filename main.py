@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import sys
 
+from stych_sniper import history
 from stych_sniper.client import StychClient, StychError
 from stych_sniper.config import load_config, load_secrets
 from stych_sniper.filters import describe, matches, slot_key
@@ -51,6 +52,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Veille des créneaux de conduite Stych.")
     parser.add_argument("--config", default="config.yaml", help="Fichier de filtres (défaut: config.yaml)")
     parser.add_argument("--state", default="state.json", help="Fichier d'état (défaut: state.json)")
+    parser.add_argument("--history", default="historique.csv", help="Journal des désistements (défaut: historique.csv)")
     parser.add_argument("--list-lieux", action="store_true", help="Lister les lieux puis quitter")
     parser.add_argument("--dry-run", action="store_true", help="Ne pas envoyer de notification")
     parser.add_argument("--test-telegram", action="store_true", help="Envoyer un message de test puis quitter")
@@ -126,6 +128,8 @@ def main() -> int:
             log(message)
         else:
             notifier.send(message)
+            # On journalise les désistements détectés pour bâtir un historique.
+            history.append(args.history, descriptions)
     else:
         log("Aucun nouveau créneau.")
 
