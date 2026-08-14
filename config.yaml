@@ -1,53 +1,43 @@
 # =============================================================
-#  Filtres du bot — copie ce fichier en `config.yaml`.
-#
-#  TOUT est optionnel. Un critère laissé vide (`[]` ou `null`) est
-#  ignoré. Un créneau est notifié seulement s'il passe TOUS les
-#  critères que tu as définis (ET logique entre les catégories).
-#
-#  Astuce : lance `python main.py --list-lieux` pour afficher tous
-#  les lieux disponibles (départements, villes, arrêts) avec leurs id.
+#  Filtres du bot Stych Créneau Sniper.
+#  TOUT est optionnel. Un critère vide (`[]` ou `null`) est ignoré.
+#  Un créneau est notifié seulement s'il passe TOUS les critères.
+#  Astuce : `python main.py --list-lieux` pour voir tous les lieux.
 # =============================================================
 
 filtres:
-  # --- LIEU ---
-  # Un créneau passe le filtre lieu s'il correspond à AU MOINS un des
-  # critères ci-dessous. Laisse tout vide pour accepter tous les lieux.
-  departements: []        # codes département, ex: ["75", "94"]
-  villes: []              # noms de ville, ex: ["PARIS", "VINCENNES"] (insensible à la casse)
-  codes_postaux: []       # ex: ["75011", "75012"]
-  arrets: []              # texte recherché dans l'intitulé, ex: ["Nation", "Daumesnil"]
-  lieux_ids: []           # id_lac précis, ex: ["210", "11"]
+  # --- LIEU : Bussy, Montévrain (Val d'Europe), Lagny ---
+  # (recherche insensible à la casse dans le nom de ville)
+  departements: []
+  villes: ["Bussy", "Montevrain", "Lagny"]
+  codes_postaux: []
+  arrets: []
+  lieux_ids: []
 
-  # --- DURÉE (en heures) ---
-  # nb_heure du créneau : 0.75 = 45 min, 1.5 = 1h30 (examen blanc), etc.
-  duree_min: null         # ex: 1.5 pour au moins 1h30
-  duree_max: null         # ex: 0.75 pour au plus 45 min
-  durees_exactes: []      # ex: [1.5] pour ne garder QUE les 1h30
+  # --- DURÉE : tout (leçons 45 min ET créneaux 1h30) ---
+  duree_min: null
+  duree_max: null
+  durees_exactes: []
 
   # --- CRÉDITS ---
-  credits_max: null       # ex: 2 pour ignorer les créneaux qui coûtent trop de crédits
+  credits_max: null
 
-  # --- JOURS DE LA SEMAINE ---
-  # 1 = lundi, 2 = mardi, ... 6 = samedi, 7 = dimanche
-  jours: []               # ex: [6, 7] pour le week-end uniquement
+  # --- JOURS : tous ---
+  jours: []
 
-  # --- PLAGE DE DATES --- (format AAAA-MM-JJ, bornes incluses)
-  date_debut: null        # ex: "2026-08-20"
-  date_fin: null          # ex: "2026-09-15"
+  # --- PLAGE DE DATES : d'aujourd'hui jusqu'au 28 août 2026 ---
+  date_debut: "2026-08-14"
+  date_fin: "2026-08-28"
 
-  # --- PLAGE HORAIRE --- (ne garde que les créneaux qui COMMENCENT dans la fenêtre)
-  heure_min: null         # ex: "17:00" (après le travail)
-  heure_max: null         # ex: "20:00"
+  # --- HORAIRE : n'importe quand ---
+  heure_min: null
+  heure_max: null
 
-  # --- MONITEUR --- (recherche partielle, insensible à la casse)
-  moniteurs: []           # ex: ["Gregory", "Souad"]
+  # --- MONITEUR ---
+  moniteurs: []
 
 options:
-  # N'alerter que pour les créneaux JAMAIS vus auparavant (recommandé).
-  # Si false : renvoie tous les créneaux correspondants à chaque exécution (spam).
+  # N'alerter que pour les nouveaux créneaux (recommandé).
   seulement_nouveaux: true
-
-  # Au tout premier lancement (aucun historique), envoyer un simple
-  # résumé du nombre de créneaux correspondants plutôt que la liste complète.
+  # Premier lancement : envoyer juste un résumé du nombre de créneaux.
   resume_au_premier_lancement: true

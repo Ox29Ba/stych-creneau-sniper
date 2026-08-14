@@ -177,11 +177,21 @@ def _lieu_match_by_id(prop: dict[str, Any], f: dict[str, Any]) -> bool:
 # Description lisible (pour Telegram / logs)
 # --------------------------------------------------------------------------- #
 def describe(prop: dict[str, Any], lieux_par_id: dict[str, dict[str, Any]]) -> dict[str, str]:
-    loc = primary_location(prop, lieux_par_id)
-    if loc:
-        lieu_txt = f"{loc.get('intitule', '').strip()} ({loc.get('code_postal')} {loc.get('ville')})"
-    else:
-        lieu_txt = f"lieu #{prop.get('id_lac')}"
+    # Un créneau peut être réservable sur plusieurs points de rendez-vous :
+    # on les liste tous (lieu principal en premier) pour ne pas induire en erreur.
+    prim_id = str(prop.get("id_lac"))
+    locs = sorted(
+        resolve_locations(prop, lieux_par_id),
+        key=lambda l: 0 if str(l.get("id_liste_adresse_cours")) == prim_id else 1,
+    )
+    noms, vus = [], set()
+    for loc in locs:
+        lid = str(loc.get("id_liste_adresse_cours"))
+        if lid in vus:
+            continue
+        vus.add(lid)
+        noms.append(f"{loc.get('intitule', '').strip()} ({loc.get('ville')})")
+    lieu_txt = " · ".join(noms) if noms else f"lieu #{prop.get('id_lac')}"
 
     duree = _as_float(prop.get("nb_heure")) or 0
     heures = int(duree)
