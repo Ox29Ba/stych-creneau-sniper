@@ -42,12 +42,16 @@ jobs:
 
       - name: Sauvegarder l'état + l'historique (si modifiés)
         run: |
-          if [ -n "$(git status --porcelain state.json historique.csv)" ]; then
-            git config user.name  "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add state.json historique.csv
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # On n'ajoute que les fichiers réellement présents : au premier
+          # lancement, historique.csv n'existe pas encore (0 nouveau créneau).
+          for f in state.json historique.csv; do
+            [ -f "$f" ] && git add "$f"
+          done
+          if git diff --cached --quiet; then
+            echo "Aucun changement à committer."
+          else
             git commit -m "Maj état + historique des créneaux [skip ci]"
             git push
-          else
-            echo "Aucun changement à committer."
           fi
