@@ -25,9 +25,9 @@ filtres:
   # --- JOURS : tous ---
   jours: []
 
-  # --- PLAGE DE DATES : d'aujourd'hui jusqu'au 28 août 2026 ---
-  date_debut: "2026-08-14"
-  date_fin: "2026-08-28"
+  # --- PLAGE DE DATES : du 24 octobre au 2 novembre 2026 ---
+  date_debut: "2026-10-24"
+  date_fin: "2026-11-02"
 
   # --- HORAIRE : n'importe quand ---
   heure_min: null

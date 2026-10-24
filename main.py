@@ -6,6 +6,7 @@ Usage :
     python main.py --list-lieux    # liste tous les lieux (id, dep, ville, arrêt)
     python main.py --dry-run       # affiche les créneaux trouvés sans notifier
     python main.py --test-telegram # envoie un message de test puis quitte
+    python main.py --loop 30 --until 2026-11-02  # veille locale en continu
 
 La planification (« toutes les 5 min ») est gérée à l'extérieur :
 GitHub Actions (voir .github/workflows/check-slots.yml) ou cron local.
@@ -15,6 +16,8 @@ from __future__ import annotations
 
 import argparse
 import sys
+import time
+from datetime import date
 
 from stych_sniper import history
 from stych_sniper.client import StychClient, StychError
@@ -56,6 +59,8 @@ def main() -> int:
     parser.add_argument("--list-lieux", action="store_true", help="Lister les lieux puis quitter")
     parser.add_argument("--dry-run", action="store_true", help="Ne pas envoyer de notification")
     parser.add_argument("--test-telegram", action="store_true", help="Envoyer un message de test puis quitter")
+    parser.add_argument("--loop", type=int, default=0, help="Vérifier en continu toutes les N secondes")
+    parser.add_argument("--until", help="En mode --loop : s'arrêter après cette date (AAAA-MM-JJ)")
     args = parser.parse_args()
 
     secrets = load_secrets()
@@ -82,6 +87,29 @@ def main() -> int:
     if args.list_lieux:
         return cmd_list_lieux(client)
 
+    if not args.loop:
+        return check(client, config, secrets, args)
+
+    # --- Mode boucle : on garde la session, on se reconnecte si elle expire ---
+    until = date.fromisoformat(args.until) if args.until else None
+    log(f"Veille en continu toutes les {args.loop} s" + (f" jusqu'au {until}." if until else "."))
+    while until is None or date.today() <= until:
+        try:
+            check(client, config, secrets, args)
+        except StychError as exc:
+            log(f"Session perdue ({exc}), reconnexion…")
+            try:
+                client.login()
+            except StychError as exc2:
+                log(f"ERREUR : {exc2}")
+        except Exception as exc:  # réseau, Telegram… : on ne s'arrête pas pour ça
+            log(f"ERREUR inattendue : {exc}")
+        time.sleep(args.loop)
+    log("Date de fin atteinte, arrêt de la veille.")
+    return 0
+
+
+def check(client: StychClient, config, secrets, args) -> int:
     # --- Récupération + filtrage ---
     propositions, lieux_par_id = client.fetch_propositions()
     log(f"{len(propositions)} créneaux au total sur le planning.")
