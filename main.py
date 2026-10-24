@@ -15,6 +15,8 @@ GitHub Actions (voir .github/workflows/check-slots.yml) ou cron local.
 from __future__ import annotations
 
 import argparse
+import os
+import subprocess
 import sys
 import time
 from datetime import date
@@ -29,6 +31,41 @@ from stych_sniper.state import State
 
 def log(msg: str) -> None:
     print(msg, flush=True)
+
+
+def _git(*args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(["git", *args], capture_output=True, text=True)
+
+
+def sync_depot() -> None:
+    """Sur GitHub Actions, rattrape les commits poussés depuis le déclenchement.
+
+    Un run planifié démarre sur le commit de son déclenchement, pas sur le
+    dernier : s'il a attendu derrière un run qui a poussé l'état, son push
+    final serait refusé. On avance donc la copie (au début et à la fin) en
+    gardant l'état local, plus récent, et en fusionnant l'historique.
+    """
+    if os.environ.get("GITHUB_ACTIONS") != "true":
+        return
+    fetch = _git("fetch", "--quiet", "origin", "main")
+    if fetch.returncode:
+        log(f"Synchro du dépôt impossible : {fetch.stderr.strip()}")
+        return
+    modifies = {
+        f: open(f, encoding="utf-8").read()
+        for f in ("state.json", "historique.csv")
+        if os.path.exists(f) and _git("diff", "--quiet", "HEAD", "--", f).returncode
+    }
+    reset = _git("reset", "--hard", "--quiet", "FETCH_HEAD")
+    if reset.returncode:
+        log(f"Synchro du dépôt impossible : {reset.stderr.strip()}")
+    for f, contenu in modifies.items():
+        if f == "historique.csv" and os.path.exists(f):
+            lignes = open(f, encoding="utf-8").read().splitlines()
+            lignes += [l for l in contenu.splitlines() if l not in set(lignes)]
+            contenu = "\n".join(lignes) + "\n"
+        with open(f, "w", encoding="utf-8") as fh:
+            fh.write(contenu)
 
 
 def cmd_list_lieux(client: StychClient) -> int:
@@ -63,6 +100,7 @@ def main() -> int:
     parser.add_argument("--until", help="En mode --loop : s'arrêter après cette date (AAAA-MM-JJ)")
     args = parser.parse_args()
 
+    sync_depot()
     secrets = load_secrets()
 
     # --- Test Telegram isolé (ne touche pas à Stych) ---
@@ -94,7 +132,9 @@ def main() -> int:
     fin = args.until or boucle.get("jusqu_au")
     until = date.fromisoformat(str(fin)) if fin else None
     if not intervalle or (until and date.today() > until):
-        return check(client, config, secrets, args)
+        code = check(client, config, secrets, args)
+        sync_depot()
+        return code
 
     # --- Mode boucle : on garde la session, on se reconnecte si elle expire ---
     stop_at = time.monotonic() + float(boucle.get("duree_max_s") or "inf")
@@ -112,6 +152,7 @@ def main() -> int:
             log(f"ERREUR inattendue : {exc}")
         time.sleep(intervalle)
     log("Fin de la veille (date ou durée max atteinte).")
+    sync_depot()
     return 0
 
 
