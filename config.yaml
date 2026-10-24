@@ -41,3 +41,10 @@ options:
   seulement_nouveaux: true
   # Premier lancement : envoyer juste un résumé du nombre de créneaux.
   resume_au_premier_lancement: true
+  # Veille en continu : une vérification toutes les `intervalle_s` secondes.
+  # `duree_max_s` coupe chaque exécution avant la limite de 6 h de GitHub
+  # Actions ; le cron relance aussitôt la suivante.
+  boucle:
+    intervalle_s: 30
+    duree_max_s: 20400
+    jusqu_au: "2026-11-02"

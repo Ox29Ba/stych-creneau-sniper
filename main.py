@@ -87,13 +87,19 @@ def main() -> int:
     if args.list_lieux:
         return cmd_list_lieux(client)
 
-    if not args.loop:
+    # Mode boucle : en ligne de commande, ou via `options.boucle` du config.yaml
+    # (c'est ainsi que GitHub Actions veille en continu sans toucher au workflow).
+    boucle = config.options.get("boucle") or {}
+    intervalle = args.loop or boucle.get("intervalle_s") or 0
+    fin = args.until or boucle.get("jusqu_au")
+    until = date.fromisoformat(str(fin)) if fin else None
+    if not intervalle or (until and date.today() > until):
         return check(client, config, secrets, args)
 
     # --- Mode boucle : on garde la session, on se reconnecte si elle expire ---
-    until = date.fromisoformat(args.until) if args.until else None
-    log(f"Veille en continu toutes les {args.loop} s" + (f" jusqu'au {until}." if until else "."))
-    while until is None or date.today() <= until:
+    stop_at = time.monotonic() + float(boucle.get("duree_max_s") or "inf")
+    log(f"Veille en continu toutes les {intervalle} s" + (f" jusqu'au {until}." if until else "."))
+    while (until is None or date.today() <= until) and time.monotonic() < stop_at:
         try:
             check(client, config, secrets, args)
         except StychError as exc:
@@ -104,8 +110,8 @@ def main() -> int:
                 log(f"ERREUR : {exc2}")
         except Exception as exc:  # réseau, Telegram… : on ne s'arrête pas pour ça
             log(f"ERREUR inattendue : {exc}")
-        time.sleep(args.loop)
-    log("Date de fin atteinte, arrêt de la veille.")
+        time.sleep(intervalle)
+    log("Fin de la veille (date ou durée max atteinte).")
     return 0
 
 
